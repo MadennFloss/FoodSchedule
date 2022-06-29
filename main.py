@@ -96,44 +96,50 @@ def editing(df): # функция редакции блюда. На данный
                         if el.kind == lundin and df.index(box) == 0:
                             founded = False
                             for ch in df[1]:
-                                if ch.kind == onlybreak or ch.kind == breaklun or ch.kind == breakdin or ch.kind == allin:
-                                    df[0], df[1] = df[1], df[0]
-                                    founded = True
-                                    break
-                            if not founded:
-                                for ch in df[2]:
+                                if isinstance(ch, (Dish, Drinks)):
                                     if ch.kind == onlybreak or ch.kind == breaklun or ch.kind == breakdin or ch.kind == allin:
-                                        df[0], df[2] = df[2], df[0]
+                                        df[0], df[1] = df[1], df[0]
                                         founded = True
                                         break
+                            if not founded:
+                                for ch in df[2]:
+                                    if isinstance(ch, (Dish, Drinks)):
+                                        if ch.kind == onlybreak or ch.kind == breaklun or ch.kind == breakdin or ch.kind == allin:
+                                            df[0], df[2] = df[2], df[0]
+                                            founded = True
+                                            break
 
                         if el.kind == breaklun and df.index(box) == 2:
                             founded = False
                             for ch in df[0]:
-                                if ch.kind == onlydin or ch.kind == breakdin or ch.kind == lundin or ch.kind == allin:
-                                    df[0], df[2] = df[2], df[0]
-                                    founded = True
-                                    break
-                            if not founded:
-                                for ch in df[1]:
+                                if isinstance(ch, (Dish, Drinks)):
                                     if ch.kind == onlydin or ch.kind == breakdin or ch.kind == lundin or ch.kind == allin:
-                                        df[0], df[1] = df[1], df[0]
+                                        df[0], df[2] = df[2], df[0]
                                         founded = True
                                         break
+                            if not founded:
+                                for ch in df[1]:
+                                    if isinstance(ch, (Dish, Drinks)):
+                                        if ch.kind == onlydin or ch.kind == breakdin or ch.kind == lundin or ch.kind == allin:
+                                            df[0], df[1] = df[1], df[0]
+                                            founded = True
+                                            break
 
                         if el.kind == breakdin and df.index(box) == 1:
                             founded = False
                             for ch in df[0]:
-                                if ch.kind == breaklun or ch.kind == lundin or ch.kind == allin:
-                                    df[0], df[1] = df[1], df[0]
-                                    founded = True
-                                    break
-                            if not founded:
-                                for ch in df[2]:
+                                if isinstance(ch, (Dish, Drinks)):
                                     if ch.kind == breaklun or ch.kind == lundin or ch.kind == allin:
                                         df[0], df[1] = df[1], df[0]
                                         founded = True
                                         break
+                            if not founded:
+                                for ch in df[2]:
+                                    if isinstance(ch, (Dish, Drinks)):
+                                        if ch.kind == breaklun or ch.kind == lundin or ch.kind == allin:
+                                            df[0], df[1] = df[1], df[0]
+                                            founded = True
+                                            break
 
         if iter == 2:
             for box in df:
@@ -141,9 +147,8 @@ def editing(df): # функция редакции блюда. На данный
                 for el in box:
                     if isinstance(el, (Dish, Drinks)):
                         if el.kind == onlybreak and df.index(box) != 0:
-                            df[0], df[df.index(box)] = df[df.index(box)], df[0]
+                            df[df.index(box)], df[0] = df[0], df[df.index(box)]
                             break
-
                         if el.kind == onlydin and df.index(box) != 2:
                             df[2], df[df.index(box)] = df[df.index(box)], df[2]
                             break
@@ -196,6 +201,7 @@ def dfprint (df): # функция для печати
                 collect.append(el.name)
                 if isinstance(el, Feat):
                     f.write(box[1])
+                    f.write(', ')
                     collect.append(box[1])
                     if isinstance(el, Porrige):
                         f.write(box[2])
@@ -206,13 +212,76 @@ def dfprint (df): # функция для печати
         collect.clear()
         f.write('\n')
 
+
+def opening(l_main, l_sec, l_fr, l_dr):
+    res = []
+    try:
+        f = open("positions.txt", "r")
+
+        indexes = f.readlines()
+
+        countline = 0
+        for num in indexes:
+            if countline == 0:
+                main = l_main[int(num.strip())]
+                res.append(main)
+                countline += 1
+                continue
+            elif countline == 1:
+                sec = l_sec[int(num.strip())]
+                res.append(sec)
+                countline += 1
+                continue
+            elif countline == 2:
+                fr = l_fr[int(num.strip())]
+                res.append(fr)
+                countline += 1
+                continue
+            elif countline == 3:
+                dr = l_dr[int(num.strip())]
+                res.append(dr)
+                break
+
+        f.close()
+
+    except FileNotFoundError as e:
+        main = l_main[4]
+        sec = l_sec[1]
+        fr = l_fr[1]
+        dr = l_dr[0]
+        res.append(main)
+        res.append(sec)
+        res.append(fr)
+        res.append(dr)
+
+    return res
+
+
+def saving (main, sec, fr, dr):
+
+    indexes = []
+
+    indexes.append(list_main.index(main))
+    indexes.append(list_sec.index(sec))
+    indexes.append(list_fr.index(fr))
+    indexes.append(list_dr.index(dr))
+
+    f = open("positions.txt", "w")
+    for index in indexes:
+        f.write(str(index))
+        f.write('\n')
+    f.close()
+
+
 def schedule(list_main, list_sec, list_fr, list_dr, f): #функция для следнования порядку очередности в блюдах
 
     #начальный набор позиций в списках
-    main_food = list_main[4]
-    sec_food = list_sec[1]
-    fruit_day = list_fr[1]
-    drink_day = list_dr[0]
+    list_index = opening(list_main, list_sec, list_fr, list_dr)
+
+    main_food = list_main[list_main.index(list_index[0])]
+    sec_food = list_sec[list_sec.index(list_index[1])]
+    fruit_day = list_fr[list_fr.index(list_index[2])]
+    drink_day = list_dr[list_dr.index(list_index[3])]
 
     dinosh = True  # 0 - Nosh, 1 - Dish
     switcher = True  # 0 - Fish, 1 - Meat
@@ -242,6 +311,9 @@ def schedule(list_main, list_sec, list_fr, list_dr, f): #функция для �
 
             dinosh = not dinosh
             switcher = buffer[0]
+
+        if d == 29:
+            saving(main_food, sec_food, fruit_day, drink_day)
 
         newdayfood = editing(dayfood)
         dfprint(newdayfood)
